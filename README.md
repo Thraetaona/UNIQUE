@@ -36,7 +36,7 @@ As a more detailed explanation this means Uniquely<sup>1</sup> Emulating<sup>2</
 1- because unary is a bijective numeral system.  Also the idea itself is novel and unique. <br>
 2- Given that we are designing a unary architecture on a binary system (FPGA). <br>
 3- Base-1 numeral system. <br>
-4- Integral in this context means consisting of a whole number or an undivided quantity.  Not the notion of anti-derivatives. <br>
+4- Integral in this context means consisting of a whole number or an undivided quantity.  Not the notion of anti-derivatives in calculus. <br>
 5- Technical info such as the method used to represent negative unary numbers is covered below and in the commented areas of the code. <br>
 </sub>
 
