@@ -1,4 +1,4 @@
-# Below commands are compatible with both Linux's POSIX (Including Bash) and Windows' CMD.
+# Below commands are compatible with both POSIX (Including Linux's Bash) and Windows' CMD.
 # 
 # Notes on Active-HDL:
 # Active-HDL really insists on using their GUI for every task, but they do support
@@ -22,28 +22,34 @@ library_path = compile/$(library_name)# Used as a work-around to nove Active-HDL
 # Custom functions
 # 
 # As mentioned earlier, @ only hides the echo of an specified command and does not affect it's output, and unfortunately Windows' "mkdir"
-# will print an error (More of a warning or information, but it can be ignored by make using -) and the only way to hide the error is to
+# will print an error (More of a warning or information, but it can be ignored by Make using -) and the only way to hide the error is to
 # append the output of stderr to it to a file in the _current_ directory and delete the said file along with any other unneeded
 # files in the __post_build step.
 # Also Active-HDL requires a .lib file (With the same name as the parameter after -work or -lib) to exist in the specified directory
 # even if the file is empty; since there is no other way around this the only solution is to create the said file and delete it right
 # after Active-HDL is done, thus leaving the user experience unaffected and having a cleaner and more portable repository.
-__pre_build = @-(mkdir compile >> ./tmp 2>&1) & echo $$null >> $(library_path).lib
-__post_build = @-(rm $(library_path).lib & rm ./tmp)
+#
+# Note: These two are commented out because the above approach only works during the compilation step, and simulation (Using vsim atleast)
+# Actually depends on the info stored in the .lib file.  Also both vcom and vsim will place their output in the same directory as the
+# .lib file which is unfortunate because .lib should really be more than an intermediate or a temporary but because of this behaviour
+# it has to exist in a separate folder such as "./compile" even though this makes it look just like any other file in the "./compile"
+# directory, especially given that the extension choice of this file (.lib) wrongly implies that it's a Dynamic-link library.
+#__pre_build = @-(mkdir compile >> ./tmp 2>&1) & echo $$null >> $(library_path).lib
+#__post_build = @-(rm $(library_path).lib & rm ./tmp)
 
 
 # Make targets
-run: build
-	$(__pre_build)
-	@(vsim -c -lib $(library_path) ./src/alu_tb.vhd 100ns)
-	$(__post_build)
+# TODO: replace testbench and tb_behaviour with a real test drive.
+run:
+	@vsim -c -O5 +access +w_nets +accb +accr +access +r +access +r+w -lib $(library_path) testbench tb_behavior
 
+# vcom lacks a verbosity level argument and it's console output by default states obvious info and basically just clutters the user's console,
+# but at the same time -quiet (For a successful compilation without any errors or warnings) does not give any visible indication whether the
+# compilation is done or not, so the below echo command notifies the user of that, otherwise vcom will print [only] the errors/warnings and
+# return a non-zero value which signals Make of a failed command and Make exits early without executing the next echo command. 
 build: # Active-HDL's "-lib" argument seems to be broken at the moment so -work has to be used instead.
-	$(__pre_build)
-	@(vcom -2019 -O3 -protect 0 -work $(library_path) ./src/*.vhd)
-	$(__post_build)
+	@(vcom -2019 -O3 -protect 0 -quiet -work $(library_path) ./src/*.vhd)
+	@-echo Compilation successful, built binaries have been placed in the './compile' directory.
 
 clean:
-	$(__pre_build)
 	@(vdel -lib $(library_path) -all)
-	$(__post_build)
