@@ -11,5 +11,8 @@
 # Only include these in the repository.
 !/.gitignore
 !/Makefile
+!/README.md
+!/LICENSE
 !*.vhd
 !/src/
+!/compile/*.lib
